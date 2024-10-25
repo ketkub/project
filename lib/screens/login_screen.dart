@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_product_app/screens/restaurant_list_screen.dart';
 import 'signup_screen.dart';
 import 'profile_screen.dart';
 import '../services/api_service.dart'; // เรียกใช้ service
@@ -24,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => RestaurantListScreen()),
+        MaterialPageRoute(builder: (context) => ProfileScreen(user: response)),
       );
     } else {
 // Show error
