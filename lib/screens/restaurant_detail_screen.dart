@@ -48,6 +48,15 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
     });
   }
 
+  void _launchURL() async {
+    final Uri url = Uri.parse(widget.locationUrl);
+    if (await canLaunch(url.toString())) {
+      await launch(url.toString());
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,22 +95,9 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 16.0),
-            GestureDetector(
-              onTap: () async {
-                final Uri url = Uri.parse(widget.locationUrl);
-                if (await canLaunch(url.toString())) {
-                  await launch(url.toString());
-                } else {
-                  throw 'Could not launch $url';
-                }
-              },
-              child: Text(
-                widget.locationUrl,
-                style: TextStyle(
-                  color: Colors.blue,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
+            ElevatedButton(
+              onPressed: _launchURL,
+              child: Text('View Location'), // เปลี่ยนข้อความที่นี่
             ),
             const SizedBox(height: 16.0),
 

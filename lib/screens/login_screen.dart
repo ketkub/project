@@ -1,7 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_product_app/screens/restaurant_list_screen.dart';
 import 'signup_screen.dart';
-import 'profile_screen.dart';
-import '../services/api_service.dart'; // เรียกใช้ service
+import '../services/api_service.dart';
+
+class User {
+  final int userId;
+  final String username;
+  final String email;
+
+  User({
+    required this.userId,
+    required this.username,
+    required this.email,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      userId: int.parse(json['userId'].toString()),
+      username: json['username'],
+      email: json['email'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'username': username,
+      'email': email,
+    };
+  }
+}
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -18,15 +46,16 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     final response = await _apiService.login(email, password);
-    if (response != null) {
-// Navigate to Profile Screen
 
-      Navigator.push(
+    if (response != null) {
+      final user = User.fromJson(response);
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ProfileScreen(user: response)),
+        MaterialPageRoute(
+          builder: (context) => RestaurantListScreen(user: user),
+        ),
       );
     } else {
-// Show error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Login Failed')),
       );

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-
 import '../services/api_service.dart';
 import 'login_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  final Map<String, dynamic> user;
+  final User user;
 
   EditProfileScreen({super.key, required this.user});
 
@@ -20,29 +19,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   void initState() {
-// TODO: implement initState
     super.initState();
-    _usernameController.text = widget.user['username'];
-    _emailController.text = widget.user['email'];
-    _passwordController.text = widget.user['password'];
+    _usernameController.text = widget.user.username;
+    _emailController.text = widget.user.email;
   }
 
   void _update() async {
     final username = _usernameController.text;
     final email = _emailController.text;
     final password = _passwordController.text;
-    final userId = widget.user['userId'];
-    final response =
-        await _apiService.updateProfile(userId, username, email, password);
-    if (response != null) {
-// Navigate to Login Screen
 
+    if (username.isEmpty || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Username and email cannot be empty')),
+      );
+      return;
+    }
+
+    final response = await _apiService.updateProfile(
+      widget.user.userId,
+      username,
+      email,
+      password,
+    );
+
+    if (response != null) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     } else {
-// Show error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Update Profile Failed')),
       );
@@ -70,7 +76,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(
+                labelText: 'New Password (Optional)',
+                hintText: 'Leave blank to keep current password',
+              ),
               obscureText: true,
             ),
             SizedBox(height: 20),

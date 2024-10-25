@@ -12,19 +12,26 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final ApiService _apiService = ApiService();
+
   void _signup() async {
     final username = _usernameController.text;
     final email = _emailController.text;
     final password = _passwordController.text;
+
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
     final response = await _apiService.signup(username, email, password);
     if (response != null) {
-// Navigate to Login Screen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     } else {
-// Show error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Signup Failed')),
       );
