@@ -7,7 +7,8 @@ class RestaurantDetailScreen extends StatefulWidget {
   final String description;
   final String locationUrl;
 
-  RestaurantDetailScreen({
+  const RestaurantDetailScreen({
+    super.key,
     required this.imageUrl,
     required this.restaurantName,
     required this.description,
@@ -20,31 +21,32 @@ class RestaurantDetailScreen extends StatefulWidget {
 
 class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
   final TextEditingController _reviewController = TextEditingController();
-  List<Map<String, dynamic>> _reviews = []; // To store reviews and ratings
-  double _rating = 0; // Variable to hold the rating
+  final List<Map<String, dynamic>> _reviews = [];
+  double _rating = 0;
 
   void _saveReview() {
     if (_reviewController.text.isNotEmpty && _rating > 0) {
       setState(() {
-        // Add new review and rating to the List
         _reviews.add({
           'review': _reviewController.text,
           'rating': _rating,
         });
-        _reviewController.clear(); // Clear the TextField
-        _rating = 0; // Reset the rating
+        _reviewController.clear();
+        _rating = 0;
       });
-      print("Current reviews: $_reviews"); // Show current reviews in Console
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review saved successfully')),
+      );
     } else {
-      // Message for when no review or rating is entered
-      print("No review entered or no rating selected.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter review and select a rating')),
+      );
     }
   }
 
-  // Function to set the rating
   void _setRating(double rating) {
     setState(() {
-      _rating = rating; // Update rating
+      _rating = rating;
     });
   }
 
@@ -62,6 +64,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.restaurantName),
+        backgroundColor: Colors.amber,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -77,7 +80,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                 height: 200,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 },
                 errorBuilder: (context, error, stackTrace) {
                   return const Icon(Icons.error, size: 100);
@@ -87,82 +90,104 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
             const SizedBox(height: 16.0),
             Text(
               widget.restaurantName,
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 8.0),
             Text(
               widget.description,
-              style: Theme.of(context).textTheme.titleSmall,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16.0),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: _launchURL,
-              child: Text('View Location'), // เปลี่ยนข้อความที่นี่
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              icon: const Icon(Icons.location_on),
+              label: const Text('View Location'),
             ),
-            const SizedBox(height: 16.0),
+            const SizedBox(height: 24.0),
 
-            // TextField for writing reviews
             TextField(
               controller: _reviewController,
               decoration: InputDecoration(
                 labelText: 'Write a review',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
+              maxLines: 2,
             ),
-
-            // Star rating display
+            const SizedBox(height: 16.0),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(5, (index) {
                 return IconButton(
                   icon: Icon(
                     index < _rating ? Icons.star : Icons.star_border,
                     color: Colors.amber,
                   ),
-                  onPressed: () => _setRating(index + 1), // Set rating
+                  onPressed: () => _setRating(index + 1),
                 );
               }),
             ),
-            const SizedBox(height: 8.0),
-            Text('Rating: $_rating',
-                style: TextStyle(fontSize: 16)), // Show selected rating
-            const SizedBox(height: 16.0),
-
-            // Save review button
-            ElevatedButton(
-              onPressed: _saveReview,
-              child: Text('Save Review'),
+            Text(
+              'Rating: $_rating',
+              style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16.0),
 
-            // Header for Reviews
+            ElevatedButton(
+              onPressed: _saveReview,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber[800],
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Text(
+                'Save Review',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 24.0),
+
             Text(
               'Reviews:',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16.0),
-
-            // Display ListView for reviews
-            Container(
-              height: 200, // Set height for ListView
-              child: ListView.builder(
-                itemCount: _reviews.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(_reviews[index]['review']), // Show added review
-                    subtitle: Row(
-                      children: List.generate(5, (starIndex) {
-                        return Icon(
-                          starIndex < _reviews[index]['rating']
-                              ? Icons.star
-                              : Icons.star_border,
-                          color: Colors.amber,
-                        );
-                      }),
-                    ),
-                  );
-                },
-              ),
-            ),
+            _reviews.isEmpty
+                ? const Text('No reviews yet')
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _reviews.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: ListTile(
+                          title: Text(_reviews[index]['review']),
+                          subtitle: Row(
+                            children: List.generate(5, (starIndex) {
+                              return Icon(
+                                starIndex < _reviews[index]['rating']
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: Colors.amber,
+                              );
+                            }),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ],
         ),
       ),

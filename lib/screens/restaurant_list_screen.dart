@@ -1,4 +1,3 @@
-// lib/screens/restaurant_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_product_app/screens/login_screen.dart';
 import 'package:flutter_product_app/screens/profile_screen.dart';
@@ -30,9 +29,9 @@ class Restaurant {
 }
 
 class RestaurantListScreen extends StatefulWidget {
-  final User user; // Accept user object as a parameter
+  final User user;
 
-  RestaurantListScreen({required this.user}); // Constructor
+  const RestaurantListScreen({super.key, required this.user});
 
   @override
   _RestaurantListScreenState createState() => _RestaurantListScreenState();
@@ -50,7 +49,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
   Future<void> fetchRestaurants() async {
     try {
       final response = await http.get(
-          Uri.parse('https://apinodedb-7e4w.onrender.com/api/restaurants'));
+          Uri.parse('http://192.168.56.1:3000/api/restaurants'));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -68,17 +67,17 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[200],
       appBar: AppBar(
-        title: Text('Restaurant List'),
+        title: const Text('Restaurant List'),
         actions: [
           IconButton(
-            icon: Icon(Icons.person),
+            icon: const Icon(Icons.person),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      ProfileScreen(user: widget.user), // Send user object
+                  builder: (context) => ProfileScreen(user: widget.user),
                 ),
               );
             },
@@ -88,12 +87,12 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: restaurants.isEmpty
-            ? Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator())
             : GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
+                  crossAxisSpacing: 10.0,
+                  mainAxisSpacing: 10.0,
                   childAspectRatio: 0.75,
                 ),
                 itemCount: restaurants.length,
@@ -114,17 +113,18 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                       );
                     },
                     child: Card(
-                      elevation: 4.0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
+                        borderRadius: BorderRadius.circular(12.0),
                       ),
+                      elevation: 5.0,
+                      shadowColor: Colors.blueAccent.withOpacity(0.2),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: ClipRRect(
-                              borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(8.0)),
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(12.0)),
                               child: Image.network(
                                 restaurant.imageUrl,
                                 fit: BoxFit.cover,
@@ -132,21 +132,25 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                                 loadingBuilder:
                                     (context, child, loadingProgress) {
                                   if (loadingProgress == null) return child;
-                                  return Center(
+                                  return const Center(
                                       child: CircularProgressIndicator());
                                 },
                                 errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(Icons.error, size: 50);
+                                  return const Center(
+                                    child: Icon(Icons.error, size: 50),
+                                  );
                                 },
                               ),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.fromLTRB(8.0, 10.0, 8.0, 4.0),
                             child: Text(
                               restaurant.name,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
                             ),
                           ),
                           Padding(
@@ -156,8 +160,13 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                               restaurant.description,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
                             ),
                           ),
+                          const SizedBox(height: 10),
                         ],
                       ),
                     ),

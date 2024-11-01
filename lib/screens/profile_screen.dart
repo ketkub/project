@@ -2,55 +2,48 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
 import 'edit_profile_screen.dart';
+import 'dart:io';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final User user;
-  final ApiService _apiService = ApiService();
 
-  ProfileScreen({required this.user});
+  ProfileScreen({super.key, required this.user});
+
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  File? _profileImage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileImage();
+  }
+
+  void _loadProfileImage() {
+    // ตรวจสอบว่าผู้ใช้มีภาพโปรไฟล์หรือไม่
+    if (widget.user.profileImageUrl != null && widget.user.profileImageUrl!.isNotEmpty) {
+      // ตรวจสอบว่าเป็น URL หรือ path
+      setState(() {
+        _profileImage = File(widget.user.profileImageUrl!); // เปลี่ยนเป็น NetworkImage ถ้าจำเป็น
+      });
+    }
+  }
 
   void _deleteAccount(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Confirm Delete'),
-          content: Text(
-              'Are you sure you want to delete your account? This action cannot be undone.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Center(child: CircularProgressIndicator()),
+    final apiService = ApiService();
+    final success = await apiService.deleteAccount(widget.user.userId);
+    if (success) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
-
-      final success = await _apiService.deleteAccount(user.userId);
-      Navigator.pop(context);
-
-      if (success) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => LoginScreen()),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete account')),
-        );
-      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to delete account')),
+      );
     }
   }
 
@@ -69,44 +62,60 @@ class ProfileScreen extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 50,
-                child: Text(
-                  user.username[0].toUpperCase(),
-                  style: TextStyle(fontSize: 32),
-                ),
+                backgroundColor: Colors.amber,
+                backgroundImage: _profileImage != null 
+                    ? FileImage(_profileImage!) 
+                    : (widget.user.profileImageUrl != null && widget.user.profileImageUrl!.isNotEmpty 
+                        ? NetworkImage(widget.user.profileImageUrl!) 
+                        : null),
+                child: _profileImage == null 
+                    ? Text(
+                        widget.user.username.isNotEmpty ? widget.user.username[0].toUpperCase() : '?',
+                        style: const TextStyle(fontSize: 32, color: Colors.white),
+                      )
+                    : null,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
-                'Welcome, ${user.username}',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                'Welcome, ${widget.user.username}',
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               Text(
-                user.email,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                widget.user.email,
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 30),
               ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EditProfileScreen(user: user),
+                      builder: (context) => EditProfileScreen(user: widget.user),
                     ),
                   );
+                  if (result != null && result is File) {
+                    setState(() {
+                      _profileImage = result;
+                    });
+                  }
                 },
-                icon: Icon(Icons.edit),
-                label: Text('Edit Profile'),
+                icon: const Icon(Icons.edit),
+                label: const Text('Edit Profile'),
                 style: ElevatedButton.styleFrom(
-                  minimumSize: Size(200, 45),
+                  minimumSize: const Size(200, 45),
+                  backgroundColor: Colors.amber,
+                  textStyle: const TextStyle(fontSize: 18),
                 ),
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () => _deleteAccount(context),
-                icon: Icon(Icons.delete_forever),
-                label: Text('Delete Account'),
+                icon: const Icon(Icons.delete_forever),
+                label: const Text('Delete Account'),
                 style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(200, 45),
                   backgroundColor: Colors.red,
-                  minimumSize: Size(200, 45),
+                  textStyle: const TextStyle(fontSize: 18),
                 ),
               ),
             ],
