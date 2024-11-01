@@ -24,7 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _loadProfileImage() {
     // ตรวจสอบว่าผู้ใช้มีภาพโปรไฟล์หรือไม่
-    if (widget.user.profileImageUrl != null && widget.user.profileImageUrl!.isNotEmpty) {
+    if (widget.user.profileImageUrl != null && widget.user.profileImageUrl!.isEmpty) {
       // ตรวจสอบว่าเป็น URL หรือ path
       setState(() {
         _profileImage = File(widget.user.profileImageUrl!); // เปลี่ยนเป็น NetworkImage ถ้าจำเป็น

@@ -7,13 +7,13 @@ class User {
   final int userId;
   final String username;
   final String email;
-  final String? profileImageUrl; // เปลี่ยนชื่อเป็น profileImageUrl
+  final String? profileImageUrl;
 
   User({
     required this.userId,
     required this.username,
     required this.email,
-    this.profileImageUrl,
+    this.profileImageUrl, // Provide a default value
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -21,6 +21,7 @@ class User {
       userId: int.parse(json['userId'].toString()),
       username: json['username'],
       email: json['email'],
+      profileImageUrl: json['profileImageUrl'] , // Handle profile image URL
     );
   }
 
@@ -29,6 +30,7 @@ class User {
       'userId': userId,
       'username': username,
       'email': email,
+      'profileImageUrl': profileImageUrl, // Include profileImageUrl
     };
   }
 }
@@ -47,8 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   void _login() async {
-    final email = _emailController.text;
-    final password = _passwordController.text;
+    final email = _emailController.text.trim(); // Trim whitespace
+    final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -58,28 +60,35 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() {
-      _isLoading = true;
+      _isLoading = true; // Show loading indicator
     });
 
-    final response = await _apiService.login(email, password);
+    try {
+      final response = await _apiService.login(email, password);
 
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (response != null && !response.containsKey('error')) {
-      final user = User.fromJson(response);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => RestaurantListScreen(user: user),
-        ),
-      );
-    } else {
-      final errorMessage = response?['error'] ?? 'Login Failed';
+      if (response != null && !response.containsKey('error')) {
+        final user = User.fromJson(response);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RestaurantListScreen(user: user),
+          ),
+        );
+      } else {
+        final errorMessage = response?['error'] ?? 'Login Failed';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } catch (e) {
+      // Handle any exceptions that occur during the login process
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
+        const SnackBar(content: Text('An error occurred. Please try again.')),
       );
+    } finally {
+      setState(() {
+        _isLoading = false; // Hide loading indicator
+      });
     }
   }
 
